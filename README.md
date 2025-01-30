@@ -30,3 +30,7 @@
     
     3. Print All Transactions:
         AC001 202306
+
+## Github Actions:
+    1. Tests are run on every commit to main branch
+    2. Tests are run on every PR for main branch
