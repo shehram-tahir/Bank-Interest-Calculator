@@ -31,8 +31,12 @@ class Transaction:
         self.print_account_statement(account)
         return self.accounts[account]["balance"]
 
-    def validate_transaction_type(self, txn_type: str) -> None:
-        """Validate transaction type to be either of W or D type"""
+    @staticmethod
+    def validate_transaction_type(txn_type: str) -> None:
+        """
+        Validate transaction type
+        :param txn_type: Value can be either w or d case insensitive
+        """
         if txn_type not in ['d', 'w']:
             raise Exception('Transaction type can only either be w or d.')
 
@@ -90,15 +94,7 @@ class Transaction:
             self.accounts[account]["balance"] -= amount
         else:
             self.accounts[account]["balance"] += amount
-
-        # Days with no transactions have balance of last transaction to be used in interest calculation
-        prev_txn = self.accounts[account]["transactions"][-1] if self.accounts[account]["transactions"] else {}
-        if prev_txn and (txn_date.date() - prev_txn['date'].date()).days + 1 > 0:  # Updating balance of each missed day
-            prev_date = prev_txn['date'] + timedelta(days=1)
-            while prev_date < txn_date:
-                self.balance_by_day[prev_date.date()] = prev_txn['current_balance']
-                prev_date += timedelta(days=1)
-
+        self.update_missing_days_balance(txn_date, account)
         # Adding time to date to be able to sort transactions of a same day based on time
         current_time = datetime.now().time()
         txn_date= txn_date.replace(hour=current_time.hour, minute=current_time.minute, second=current_time.second,
@@ -118,3 +114,17 @@ class Transaction:
         :param date
         """
         return f"{date.strftime('%Y%m%d')}-{self.txn_no_id[date]}"
+
+    def update_missing_days_balance(self, txn_date: datetime, account: str):
+        """
+        Update balance of days that had no transaction with last day's balance
+        :param txn_date:
+        :param account:
+        :return:
+        """
+        prev_txn = self.accounts[account]["transactions"][-1] if self.accounts[account]["transactions"] else {}
+        if prev_txn and (txn_date.date() - prev_txn['date'].date()).days + 1 > 0:  # Updating balance of missed days
+            prev_date = prev_txn['date'] + timedelta(days=1)
+            while prev_date < txn_date:
+                self.balance_by_day[prev_date.date()] = prev_txn['current_balance']
+                prev_date += timedelta(days=1)
