@@ -82,12 +82,10 @@ class Interest:
             filtered_rule = None
             # Gather interest rules that apply to each transaction and calculate interest
             if daily_balance_date.year == year_month.year and daily_balance_date.month == year_month.month:
-                last_date_txn_balance['date'] = daily_balance_date
                 for rule in self.interest_rules:
                     if rule['date'].date() <= daily_balance_date:  # Get the most recent interest rule in the past
                         filtered_rule = rule
-                        last_date_txn_balance['rule'] = filtered_rule
-                        last_date_txn_balance['balance'] = balance
+                        last_date_txn_balance.update(rule=filtered_rule, balance=balance, date=daily_balance_date)
             if filtered_rule:
                 interest += balance * (filtered_rule['rate'] / 100 )
         # Calculate interest for days of no transactions
@@ -97,6 +95,7 @@ class Interest:
             if remaining_days > 0:
                 for _ in range(remaining_days):
                     interest += last_date_txn_balance['balance'] * (last_date_txn_balance['rule']['rate'] / 100)
+        interest = round(interest/365, 2) if interest else interest
         return interest
 
     def validate_input_acount_date(self, acount_date):
@@ -124,8 +123,6 @@ class Interest:
         transaction_balances = self.filter_current_month_transactions(year_month, account)
         interest = self.calculate_monthly_interest(year_month)
         if interest:
-            interest /= 365
-            interest = round(interest, 2)
             transaction_balances.append({
                 "date": datetime.now(), "id": '', "type": 'I', "amount": interest,
                 "current_balance": self.accounts[account]['balance'] + interest
