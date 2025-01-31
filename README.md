@@ -5,11 +5,12 @@
 
     2. Run Commands
         - pip3 install virtualenv
-        - python3 -m venv test-env
-        - pip install -r requirements.txt
+        - python3 -m venv venv
+        - source venv/bin/activate
+        - pip3 install -r requirements.txt
 
 ### Run Project
-    python run_prompt.py
+    python3 run_prompt.py
 
 ## Run Tests
     pytest tests.py
