@@ -33,7 +33,7 @@ def test_define_interest_rule(bank_system):
 def test_calculate_interest(bank_system):
     bank_system.define_interest_rule("20240101 RULE01 2.0")
     bank_system.handle_transaction("20240101 AC001 d 1000")
-    interest = bank_system.print_transaction_and_interest("AC001 202401")
+    interest = bank_system.handle_show_transaction_and_interest("AC001 202401")
     assert interest > 0
     assert round(bank_system.accounts["AC001"]["balance"]) == 1000
 
@@ -63,7 +63,7 @@ def test_complete_flow_one(bank_system):
         bank_system.handle_transaction(txn)
     for rule in ['20240105 RULE01 2.00', '20240115 RULE02 3.00']:
         bank_system.define_interest_rule(rule)
-    interest = bank_system.print_transaction_and_interest('AC001 202401')
+    interest = bank_system.handle_show_transaction_and_interest('AC001 202401')
     assert round(interest, 2) == 2.1
 
 
@@ -72,5 +72,5 @@ def test_complete_flow_two(bank_system):
         bank_system.handle_transaction(txn)
     for rule in ['20240101 RULE01 2.00', '20240103 RULE01 4.00', '20240115 RULE02 3.00']:
         bank_system.define_interest_rule(rule)
-    interest = bank_system.print_transaction_and_interest('AC001 202401')
+    interest = bank_system.handle_show_transaction_and_interest('AC001 202401')
     assert round(interest, 2) == 2.93

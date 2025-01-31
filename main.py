@@ -28,7 +28,7 @@ class BankSystem(BankOperationsMixins):
                 elif choice == "p":
                     account_no = input(INPUT_ACCOUNT)
                     if account_no:
-                        self.print_transaction_and_interest(account_no)
+                        self.handle_show_transaction_and_interest(account_no)
                 elif choice == "q":
                     logger.info(INPUT_QUIT)
                     break

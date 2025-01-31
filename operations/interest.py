@@ -12,10 +12,11 @@ class Interest:
         self.interest_rules = []
         self.accounts = {}
 
-    def define_interest_rule(self, interest_rule: str):
+    def validate_new_interest_rule(self, interest_rule):
         """
-        Adds or updates an interest rule.
-        :param interest_rule Input interest rule
+        Validate input interest rule
+        :param interest_rule:
+        :return:
         """
         interest_rule = interest_rule.strip().split()
         if len(interest_rule) != 3:
@@ -25,6 +26,14 @@ class Interest:
         rate = float(rate)
         if rate <= 0 or rate >= 100:
             raise Exception("Interest rate must be greater than 0 and less than 100.")
+        return date, rate, rule_id
+
+    def define_interest_rule(self, interest_rule: str):
+        """
+        Adds or updates an interest rule.
+        :param interest_rule Input interest rule
+        """
+        date, rate, rule_id = self.validate_new_interest_rule(interest_rule)
         self.interest_rules = [rule for rule in self.interest_rules if rule["date"] != date]
         self.interest_rules.append({"date": date, "rule_id": rule_id, "rate": rate})
         self.interest_rules.sort(key=lambda x: x["date"])
@@ -46,33 +55,32 @@ class Interest:
                 rate + ' ' * find_space(rate)
             ))
 
-    def print_transaction_and_interest(self, account_no: str) -> float:
+    def filter_current_month_transactions(self, year_month: datetime, account: str):
         """
-        Show all transactions along with interest of the month.
-        :param account_no: Input account number in string
+        Return all transactions of provided month
+        :param year_month:
+        :param account:
+        :return:
         """
-        account_no = account_no.strip().split()
-        if len(account_no) != 2:
-            raise Exception('Interest values are not in correct format.')
-        account, year_month = account_no
-        year_month = datetime.strptime(year_month, "%Y%m")
-        if self.accounts.get('account') and self.accounts['account']['transactions']:
-            raise Exception('Provided account or its does not exist.')
-        self.interest_rules.sort(key=lambda x: x['date'])
-        self.accounts[account]['transactions'].sort(key=lambda x: x['date'])
         transaction_balances = []
-        # Gather transactions of provided month from all transactions
         for index, txn in enumerate(self.accounts[account]['transactions'], start=1):
             if txn["date"].year > year_month.year:
                 break
             if txn["date"].year == year_month.year and txn["date"].month == year_month.month:
                 transaction_balances.append(copy.deepcopy(txn))
+        return transaction_balances
 
-        # Gather interest rules that apply to each transaction and calculate interest
+    def calculate_monthly_interest(self, year_month):
+        """
+        Calculate interest of the provided month
+        :param year_month:
+        :return:
+        """
         interest = 0.00
         last_date_txn_balance = {}  # This is to store days of the month with no transactions
         for daily_balance_date, balance in self.balance_by_day.items():
             filtered_rule = None
+            # Gather interest rules that apply to each transaction and calculate interest
             if daily_balance_date.year == year_month.year and daily_balance_date.month == year_month.month:
                 last_date_txn_balance['date'] = daily_balance_date
                 for rule in self.interest_rules:
@@ -89,14 +97,28 @@ class Interest:
             if remaining_days > 0:
                 for _ in range(remaining_days):
                     interest += last_date_txn_balance['balance'] * (last_date_txn_balance['rule']['rate'] / 100)
+        return interest
+
+    def handle_show_transaction_and_interest(self, account_no: str) -> float:
+        """
+        Show all transactions along with interest of the month.
+        :param account_no: Input account number in string
+        """
+        account_no = account_no.strip().split()
+        if len(account_no) != 2:
+            raise Exception('Interest values are not in correct format.')
+        account, year_month = account_no
+        year_month = datetime.strptime(year_month, "%Y%m")
+        if self.accounts.get('account') and self.accounts['account']['transactions']:
+            raise Exception('Provided account or its does not exist.')
+        self.accounts[account]['transactions'].sort(key=lambda x: x['date'])
+        transaction_balances = self.filter_current_month_transactions(year_month, account)
+        interest = self.calculate_monthly_interest(year_month)
         if interest:
             interest /= 365
             interest = round(interest, 2)
             transaction_balances.append({
-                "date": datetime.now(),
-                "id": '',
-                "type": 'I',
-                "amount": interest,
+                "date": datetime.now(), "id": '', "type": 'I', "amount": interest,
                 "current_balance": self.accounts[account]['balance'] + interest
             })
         self.print_eom_interest_results(transaction_balances)
