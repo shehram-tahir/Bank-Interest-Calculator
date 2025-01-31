@@ -13,9 +13,10 @@ class BankSystem(BankOperationsMixins):
         """
         Listen to user commands
         """
+        display_text = MAIN_OPERATIONS
         while True:
             try:
-                choice = input(MAIN_OPERATIONS).strip().lower()
+                choice = input(display_text).strip().lower()
                 if choice == "t":
                     transaction_items = input(INPUT_TXN)
                     if transaction_items:
@@ -25,15 +26,12 @@ class BankSystem(BankOperationsMixins):
                     if interest_rule:
                         self.define_interest_rule(interest_rule)
                 elif choice == "p":
-                    account_no = input(
-                        'Please enter account and month to generate the statement <Account> <Year><Month>'
-                        '(or enter blank to go back to main menu):>')
+                    account_no = input(INPUT_ACCOUNT)
                     if account_no:
                         self.print_transaction_and_interest(account_no)
                 elif choice == "q":
-                    logger.info("Thank you for banking with AwesomeGIC Bank. Have a nice day!")
+                    logger.info(INPUT_QUIT)
                     break
-                else:
-                    logger.info("Invalid option. Please try again.")
+                display_text = MORE_OPERATIONS
             except Exception as err:
                 logger.error(str(err))
