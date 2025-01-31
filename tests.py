@@ -35,7 +35,7 @@ def test_calculate_interest(bank_system):
     bank_system.handle_transaction("20240101 AC001 d 1000")
     interest = bank_system.print_transaction_and_interest("AC001 202401")
     assert interest > 0
-    assert round(bank_system.accounts["AC001"]["balance"]), 2 == 2000.10
+    assert round(bank_system.accounts["AC001"]["balance"]) == 1000
 
 
 def test_invalid_transactions(bank_system):
