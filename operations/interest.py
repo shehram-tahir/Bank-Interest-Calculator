@@ -99,18 +99,27 @@ class Interest:
                     interest += last_date_txn_balance['balance'] * (last_date_txn_balance['rule']['rate'] / 100)
         return interest
 
-    def handle_show_transaction_and_interest(self, account_no: str) -> float:
+    def validate_input_acount_date(self, acount_date):
         """
-        Show all transactions along with interest of the month.
-        :param account_no: Input account number in string
+        Validate input account and date for interest calculation
+        :param acount_date:
+        :return:
         """
-        account_no = account_no.strip().split()
-        if len(account_no) != 2:
+        acount_date = acount_date.strip().split()
+        if len(acount_date) != 2:
             raise Exception('Interest values are not in correct format.')
-        account, year_month = account_no
+        account, year_month = acount_date
         year_month = datetime.strptime(year_month, "%Y%m")
         if self.accounts.get('account') and self.accounts['account']['transactions']:
             raise Exception('Provided account or its does not exist.')
+        return account, year_month
+
+    def handle_show_transaction_and_interest(self, acount_date: str) -> float:
+        """
+        Show all transactions along with interest of the month.
+        :param acount_date: Input account number in string
+        """
+        account, year_month = self.validate_input_acount_date(acount_date)
         self.accounts[account]['transactions'].sort(key=lambda x: x['date'])
         transaction_balances = self.filter_current_month_transactions(year_month, account)
         interest = self.calculate_monthly_interest(year_month)
