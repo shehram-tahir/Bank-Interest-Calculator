@@ -58,18 +58,19 @@ class Interest:
         year_month = datetime.strptime(year_month, "%Y%m")
         if self.accounts.get('account') and self.accounts['account']['transactions']:
             raise Exception('Provided account or its does not exist.')
-
         self.interest_rules.sort(key=lambda x: x['date'])
         self.accounts[account]['transactions'].sort(key=lambda x: x['date'])
         transaction_balances = []
+        # Gather transactions of provided month from all transactions
         for index, txn in enumerate(self.accounts[account]['transactions'], start=1):
             if txn["date"].year > year_month.year:
                 break
             if txn["date"].year == year_month.year and txn["date"].month == year_month.month:
                 transaction_balances.append(copy.deepcopy(txn))
 
+        # Gather interest rules that apply to each transaction and calculate interest
         interest = 0.00
-        last_date_txn_balance = {}
+        last_date_txn_balance = {}  # This is to store days of the month with no transactions
         for daily_balance_date, balance in self.balance_by_day.items():
             filtered_rule = None
             if daily_balance_date.year == year_month.year and daily_balance_date.month == year_month.month:
@@ -81,6 +82,7 @@ class Interest:
                         last_date_txn_balance['balance'] = balance
             if filtered_rule:
                 interest += balance * (filtered_rule['rate'] / 100 )
+        # Calculate interest for days of no transactions
         if last_date_txn_balance.get('date') and last_date_txn_balance.get('rule'):
             last_month_day = calendar.monthrange(year_month.year, year_month.month)[1]
             remaining_days = (last_date_txn_balance['date'].replace(day=last_month_day) - last_date_txn_balance['date']).days

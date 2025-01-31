@@ -13,7 +13,10 @@ class Transaction:
         self.txn_no_id = {}
 
     def handle_transaction(self, transaction_items: str) -> float:
-        """Validate and add transaction"""
+        """
+        Validate and add transaction
+        :param transaction_items
+        """
         transaction_items = transaction_items.strip().split()
         if len(transaction_items) != 4:
             raise Exception('Transaction values are not in correct format.')
@@ -88,6 +91,7 @@ class Transaction:
         else:
             self.accounts[account]["balance"] += amount
 
+        # Days with no transactions have balance of last transaction to be used in interest calculation
         prev_txn = self.accounts[account]["transactions"][-1] if self.accounts[account]["transactions"] else {}
         if prev_txn and (txn_date.date() - prev_txn['date'].date()).days + 1 > 0:  # Updating balance of each missed day
             prev_date = prev_txn['date'] + timedelta(days=1)
@@ -95,6 +99,7 @@ class Transaction:
                 self.balance_by_day[prev_date.date()] = prev_txn['current_balance']
                 prev_date += timedelta(days=1)
 
+        # Adding time to date to be able to sort transactions of a same day based on time
         current_time = datetime.now().time()
         txn_date= txn_date.replace(hour=current_time.hour, minute=current_time.minute, second=current_time.second,
                                    microsecond=current_time.microsecond)
