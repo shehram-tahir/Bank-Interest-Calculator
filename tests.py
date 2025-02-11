@@ -20,6 +20,16 @@ def test_add_transaction(bank_system):
         bank_system.handle_transaction("20240101 AC002 w 500")  # Should fail
 
 
+def test_transaction_limit(bank_system):
+    assert bank_system.handle_transaction("20240101 AC001 d 5000") == 5000.0
+    with pytest.raises(Exception, match="Transaction limit exceeded"):
+        bank_system.handle_transaction("20240101 AC001 w 3001")
+    bank_system.handle_transaction("20240101 AC001 w 2000")
+    bank_system.handle_transaction("20240101 AC001 w 1000")
+    with pytest.raises(Exception, match="Transaction limit exceeded"):
+        bank_system.handle_transaction("20240101 AC001 w 1000")
+
+
 def test_define_interest_rule(bank_system):
     assert bank_system.define_interest_rule("20240101 RULE01 2.0") is None
     assert len(bank_system.interest_rules) == 1

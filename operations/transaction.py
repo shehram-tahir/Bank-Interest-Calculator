@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from logger import logger
 from messages import TRANSACTION
 from utils import validate_time_format
+from constants import W_TRANSACTION_LIMIT
 
 
 class Transaction:
@@ -26,6 +27,7 @@ class Transaction:
         date = validate_time_format(date)
         self.validate_transaction_type(txn_type)
         self.validate_transaction_amount(account, amount, txn_type)
+        self.validate_transaction_limit(account, amount, txn_type, date)
         self.txn_no_id[date] = self.txn_no_id[date] + 1 if self.txn_no_id.get(date) else 1
         self.add_transaction(date, account, txn_type, amount)
         self.print_account_statement(account)
@@ -39,6 +41,25 @@ class Transaction:
         """
         if txn_type not in ['d', 'w']:
             raise Exception('Transaction type can only either be w or d.')
+
+    def validate_transaction_limit(self, account: str, amount: float, txn_type: str,
+                                   date: datetime) -> None:
+        """
+        Validate transaction amount against a few conditions
+        :param account
+        :param amount
+        :param txn_type
+        :param date
+        """
+        if txn_type != "w":
+            return
+        transactions = self.accounts[account].get('transactions')
+        total_txt_amount = amount
+        for txn in transactions:
+            if txn['type'].lower() == 'w' and  txn['date'].date() == date.date():
+                total_txt_amount += txn['amount']
+        if total_txt_amount > W_TRANSACTION_LIMIT:
+            raise Exception('Transaction limit exceeded')
 
     def validate_transaction_amount(self, account: str, amount: float, txn_type: str) -> None:
         """
